@@ -1,11 +1,17 @@
 # frozen_string_literal: true
 
-require_relative 'model'
+require_relative 'lazy_model'
 
 module Redd
   module Models
     # A multi.
-    class Multireddit < Model
+    class Multireddit < LazyModel
+      # Create a Multireddit from its path.
+      # @param client [APIClient] the api client to initialize the object with
+      # @param id [String] the multi's path (with a leading and trailing slash)
+      # @return [Multireddit]
+      def self.from_id(client, id) = new(client, path: id)
+
       # Get the appropriate listing.
       # @param sort [:hot, :new, :top, :controversial, :comments, :rising, :gilded] the type of
       #   listing
@@ -21,84 +27,40 @@ module Redd
       # @return [Listing<Submission>]
       def listing(sort, **params)
         params[:t] = params.delete(:time) if params.key?(:time)
-        client.model(:get, "#{read_attribute(:path)}#{sort}", params)
+
+        @client.model(:get, "#{@attributes.fetch(:path)}#{sort}", params)
       end
 
-      # @!method hot(**params)
-      # @!method new(**params)
-      # @!method top(**params)
-      # @!method controversial(**params)
-      # @!method comments(**params)
-      # @!method rising(**params)
-      # @!method gilded(**params)
-      #
       # @see #listing
-      %i[hot new top controversial comments rising gilded].each do |sort|
-        define_method(sort) { |**params| listing(sort, **params) }
-      end
+      def hot(**params) = listing(:hot, **params)
 
-      # @!attribute [r] can_edit?
-      #   @return [Boolean] whether the user can edit the multireddit
-      property :can_edit?, from: :can_edit
+      # @see #listing
+      def new(**params) = listing(:new, **params)
 
-      # @!attribute [r] display_name
-      #   @return [String] the multi's display name
-      property :display_name
+      # @see #listing
+      def top(**params) = listing(:top, **params)
 
-      # @!attribute [r] name
-      #   @return [String] the multireddit name
-      property :name
+      # @see #listing
+      def controversial(**params) = listing(:controversial, **params)
 
-      # @!attribute [r] description_md
-      #   @return [String] the markdown verion of the description
-      property :description_md
+      # @see #listing
+      def comments(**params) = listing(:comments, **params)
 
-      # @!attribute [r] description_html
-      #   @return [String] the html-rendered description
-      property :description_html
+      # @see #listing
+      def rising(**params) = listing(:rising, **params)
 
-      # @!attribute [r] copied_from
-      #   @return [Multireddit, nil] the multi this one was copied from
-      property :copied_from, with: ->(n) { Multireddit.new(client, path: n) if n }
-
-      # @!attribute [r] icon_url
-      #   @return [String, nil] the icon url
-      property :icon_url
-
-      # @!attribute [r] subreddits
-      #   @return [Array<Subreddit>] the subreddits in this multi
-      property :subreddits,
-               with: ->(a) { a.map { |n| Subreddit.new(client, display_name: n.fetch(:name)) } }
-
-      # @!attribute [r] created_at
-      #   @return [Time] the creation time
-      property :created_at, from: :created_utc, with: ->(t) { Time.at(t) }
-
-      # @!attribute [r] key_color
-      #   @return [String] a hex color
-      property :key_color
-
-      # @!attribute [r] visibility
-      #   @return [String] the multi visibility, either "public" or "private"
-      property :visibility
-
-      # @!attribute [r] icon_name
-      #   @return [String] the icon name
-      property :icon_name
-
-      # @!attribute [r] weighting_scheme
-      #   @return [String]
-      property :weighting_scheme
-
-      # @!attribute [r] path
-      #   @return [String] the multi path
-      property :path, :required
+      # @see #listing
+      def gilded(**params) = listing(:gilded, **params)
 
       private
 
-      def lazer_reload
-        client.get("/api/multi#{read_attribute(:path)}").body[:data]
+      def after_initialize
+        @attributes[:subreddits].map! do |subreddit|
+          Subreddit.new(client, display_name: subreddit[:name])
+        end
       end
+
+      def default_loader() = @client.get("/api/multi#{@attributes.fetch(:path)}").body[:data]
     end
   end
 end

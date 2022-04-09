@@ -1,52 +1,26 @@
 # frozen_string_literal: true
 
-require_relative 'model'
+require_relative 'basic_model'
 
 module Redd
   module Models
     # A backward-expading listing of items.
     # @see Stream
-    class Listing < Model
+    class Listing < BasicModel
       include Enumerable
 
-      # Create an empty listing with a client.
-      # @param client [APIClient] the client to create the listing with
-      # @return [Listing] the empty listing
-      def self.empty(client)
-        Listing.new(client, children: [])
-      end
-
-      # Create a fully initialized listing.
-      # @param client [APIClient] the api client
-      # @param attributes [Hash] the attribute hash
-      def initialize(client, attributes = {})
-        super
-        fully_loaded!
-      end
-
       # @return [Array<Comment, Submission, PrivateMessage>] an array representation of self
-      def to_a
-        read_attribute(:children)
-      end
-      alias to_ary to_a
+      def to_ary() = @attributes.fetch(:children)
 
-      %i[[] each empty? first last].each do |method_name|
-        define_method(method_name) do |*args, &block|
-          read_attribute(:children).public_send(method_name, *args, &block)
-        end
-      end
+      def [](index) = @attributes.fetch(:children)[index]
 
-      # @!attribute [r] before
-      #   @return [String] the fullname of the item before this listing
-      property :before, :nil
+      def each(&) = @attributes.fetch(:children).each(&)
 
-      # @!attribute [r] after
-      #   @return [String] the fullname of the item that the next listing will start from
-      property :after, :nil
+      def empty?() = @attributes.fetch(:children).empty?
 
-      # @!attribute [r] children
-      #   @return [Array<Model>] the listing's children
-      property :children, :required, with: ->(a) { a.map { |m| client.unmarshal(m) } }
+      def first(amount = nil) = @attributes.fetch(:children).first(amount)
+
+      def last(amount = nil) = @attributes.fetch(:children).last(amount)
     end
   end
 end

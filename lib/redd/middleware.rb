@@ -8,6 +8,8 @@ require_relative '../redd'
 module Redd
   # Rack middleware.
   class Middleware
+    STRATEGY_OPTS = %i[user_agent client_id secret redirect_uri].freeze
+
     # @param opts [Hash] the options to create the object with
     # @option opts [String] :user_agent your app's *unique* and *descriptive* user agent
     # @option opts [String] :client_id the client id of your app
@@ -22,7 +24,7 @@ module Redd
     #   redirects a user to reddit
     def initialize(app, opts = {})
       @app = app
-      strategy_opts = opts.select { |k| %i[user_agent client_id secret redirect_uri].include?(k) }
+      strategy_opts = opts.select { |k| STRATEGY_OPTS.include?(k) }
       @strategy = Redd::AuthStrategies::Web.new(strategy_opts)
 
       @user_agent   = opts.fetch(:user_agent, "Redd:Web Application:v#{Redd::VERSION} (by unknown)")
@@ -44,6 +46,7 @@ module Redd
 
     def _call(env)
       @request = Rack::Request.new(env)
+
       return redirect_to_reddit! if @request.path == @via
 
       before_call
@@ -57,14 +60,17 @@ module Redd
     # Creates a unique state and redirects the user to reddit for authentication.
     def redirect_to_reddit!
       state = SecureRandom.urlsafe_base64
+
       url = Redd.url(
         client_id: @client_id,
         redirect_uri: @redirect_uri,
         scope: @scope,
         duration: @duration,
-        state: state
+        state:
       )
+
       @request.session[:redd_state] = state
+
       [302, { 'Location' => url }, []]
     end
 
@@ -81,12 +87,13 @@ module Redd
     # Do any cleanup or changes after calling the application.
     def after_call
       env_session = @request.env['redd.session']
-      if env_session && env_session.client.access
+
+      if env_session&.client&.access
         # Make sure to flush any changes made to the Session client to the browser.
         @request.session[:redd_session] = env_session.client.access.to_h
       else
         # Clear the session if the app explicitly set 'redd.session' to nil.
-        @request.session.delete(:redd_session)
+        @request.session&.delete(:redd_session)
       end
     end
 
@@ -95,7 +102,8 @@ module Redd
       message = nil
       message = 'invalid_state' if @request.GET['state'] != @request.session[:redd_state]
       message = @request.GET['error'] if @request.GET['error']
-      raise Errors::TokenRetrievalError, message if message
+
+      raise Redd::TokenRetrievalError, message if message
     end
 
     # Store the access token and other details in the user's browser, assigning any errors to
@@ -106,19 +114,21 @@ module Redd
       # Try to get a code (the rescue block will also prevent crazy crashes)
       access = @strategy.authenticate(@request.GET['code'])
       @request.session[:redd_session] = access.to_h
-    rescue Errors::TokenRetrievalError, Errors::ResponseError => error
-      @request.env['redd.error'] = error
+    rescue Redd::TokenRetrievalError, Redd::ResponseError => e
+      @request.env['redd.error'] = e
     end
 
     # Return a {Redd::Models::Session} based on the hash saved into the browser's session.
     def parse_session
-      parsed_session = @request.session[:redd_session]
-                               .each_with_object({}) { |(k, v), h| h[k.to_sym] = v }
-      client = Redd::APIClient.new(@strategy,
-                                   user_agent: @user_agent,
-                                   limit_time: 0,
-                                   auto_refresh: @auto_refresh)
-      client.access = Redd::Models::Access.new(@strategy, parsed_session)
+      client = Redd::APIClient.new(
+        @strategy,
+        user_agent: @user_agent,
+        limit_time: 0,
+        auto_refresh: @auto_refresh
+      )
+
+      client.access = Redd::Models::Access.new(@strategy, @request.session[:redd_session])
+
       Redd::Models::Session.new(client)
     end
   end

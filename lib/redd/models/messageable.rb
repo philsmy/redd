@@ -11,9 +11,12 @@ module Redd
       # @param text [String] the message text
       # @param from [Subreddit, nil] the subreddit to send the message on behalf of
       def send_message(to:, subject:, text:, from: nil)
-        params = { to: to, subject: subject, text: text }
-        params[:from_sr] = from.display_name if from
-        client.post('/api/compose', params)
+        @client.post('/api/compose', {
+          to:,
+          subject:,
+          text:,
+          from_sr: from&.display_name
+        }.compact)
       end
     end
   end
