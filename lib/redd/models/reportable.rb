@@ -7,7 +7,7 @@ module Redd
       # Report the object.
       # @param reason [String] the report reason
       def report(reason)
-        client.post('/api/report', thing_id: read_attribute(:name), reason: reason)
+        client.post('/api/report', thing_id: read_attribute(:name), reason:)
       end
     end
   end

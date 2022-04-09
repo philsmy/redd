@@ -10,7 +10,7 @@ module Redd
       # @param link [Submission] the submission the object belongs to
       # @return [Listing<Comment, MoreComments>] the expanded children
       def expand(link:)
-        expand_recursive(link: link, lookup: {})
+        expand_recursive(link:, lookup: {})
       end
 
       # @return [Array<String>] an array representation of self
@@ -52,7 +52,7 @@ module Redd
       def expand_recursive(link:, lookup:)
         return [self] if depth == 0
 
-        expand_one(link: link).each_with_object([]) do |thing, coll|
+        expand_one(link:).each_with_object([]) do |thing, coll|
           target =
             if thing.parent_id == read_attribute(:parent_id)
               coll
@@ -72,7 +72,7 @@ module Redd
             target.push(thing)
           elsif thing.is_a?(MoreComments) && thing.count > 0
             if thing.parent_id == read_attribute(:parent_id)
-              ary = thing.expand_recursive(link: link, lookup: lookup, depth: depth - 1)
+              ary = thing.expand_recursive(link:, lookup:, depth: depth - 1)
               target.concat(ary)
             else
               target.push(thing)

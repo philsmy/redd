@@ -10,7 +10,7 @@ module Redd
       # @param content [String] the new wiki page contents
       # @param reason [String, nil] an optional reason for editing the page
       def edit(content, reason: nil)
-        params = { page: read_attribute(:title), content: content }
+        params = { page: read_attribute(:title), content: }
         params[:reason] = reason if reason
         client.post("/r/#{read_attribute(:subreddit).display_name}/api/wiki/edit", params)
       end

@@ -87,7 +87,7 @@ module Redd
 
       # @!attribute [r] author
       #   @return [User] the comment author
-      property :author, with: ->(name) { User.new(client, name: name) }
+      property :author, with: ->(name) { User.new(client, name:) }
 
       # @!attribute [r] can_mod_post?
       #   @return [Boolean] whether the logged-in user can mod post

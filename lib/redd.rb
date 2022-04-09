@@ -65,6 +65,7 @@ module Redd
     def it(opts = {})
       api_client = script(opts) || web(opts) || userless(opts)
       raise "couldn't guess app type" unless api_client
+
       Models::Session.new(api_client)
     end
 
@@ -80,12 +81,12 @@ module Redd
     def url(client_id:, redirect_uri:, response_type: 'code', state: '', scope: ['identity'],
             duration: 'temporary')
       'https://www.reddit.com/api/v1/authorize?' + URI.encode_www_form(
-        client_id: client_id,
-        redirect_uri: redirect_uri,
-        state: state,
+        client_id:,
+        redirect_uri:,
+        state:,
         scope: scope.join(','),
-        response_type: response_type,
-        duration: duration
+        response_type:,
+        duration:
       )
     end
 
@@ -101,6 +102,7 @@ module Redd
 
     def script(opts = {})
       return unless %i[client_id secret username password].all? { |o| opts.include?(o) }
+
       auth = AuthStrategies::Script.new(filter_auth(opts))
       api = APIClient.new(auth, **filter_api(opts))
       api.tap(&:authenticate)
@@ -108,6 +110,7 @@ module Redd
 
     def web(opts = {})
       return unless %i[client_id redirect_uri code].all? { |o| opts.include?(o) }
+
       auth = AuthStrategies::Web.new(**filter_auth(opts))
       api = APIClient.new(auth, **filter_api(opts))
       api.tap { |c| c.authenticate(opts[:code]) }
@@ -115,6 +118,7 @@ module Redd
 
     def userless(opts = {})
       return unless %i[client_id secret].all? { |o| opts.include?(o) }
+
       auth = AuthStrategies::Userless.new(filter_auth(opts))
       api = APIClient.new(auth, **filter_api(opts))
       api.tap(&:authenticate)

@@ -51,7 +51,7 @@ module Redd
       # @param text [String] the message text
       # @param from [Subreddit, nil] the subreddit to send the message on behalf of
       def send_message(subject:, text:, from: nil)
-        super(to: read_attribute(:name), subject: subject, text: text, from: from)
+        super(to: read_attribute(:name), subject:, text:, from:)
       end
 
       # Block this user.
@@ -78,8 +78,8 @@ module Redd
       # @param note [String] a note for the friend
       def friend(note = nil)
         name = read_attribute(:name)
-        body = JSON.generate(note ? { name: name, note: note } : { name: name })
-        client.request(:put, "/api/v1/me/friends/#{name}", body: body)
+        body = JSON.generate(note ? { name:, note: } : { name: })
+        client.request(:put, "/api/v1/me/friends/#{name}", body:)
       end
 
       # Unfriend the user.
@@ -91,7 +91,7 @@ module Redd
       # Gift a redditor reddit gold.
       # @param months [Integer] the number of months of gold to gift
       def gift_gold(months: 1)
-        client.post("/api/v1/gold/give/#{read_attribute(:name)}", months: months)
+        client.post("/api/v1/gold/give/#{read_attribute(:name)}", months:)
       end
 
       # @!attribute [r] name

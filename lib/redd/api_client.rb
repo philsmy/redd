@@ -24,7 +24,7 @@ module Redd
     # @param auto_refresh [Boolean] automatically refresh access token if nearing expiration
     def initialize(auth, endpoint: API_ENDPOINT, user_agent: USER_AGENT, limit_time: 1,
                    max_retries: 5, auto_refresh: true)
-      super(endpoint: endpoint, user_agent: user_agent)
+      super(endpoint:, user_agent:)
 
       @auth          = auth
       @access        = nil
@@ -72,8 +72,9 @@ module Redd
       handle_retryable_errors do
         response = @rate_limiter.after_limit { super(verb, path, params: api_params, **options) }
         # Raise errors if encountered at the API level.
-        response_error = @error_handler.check_error(response, raw: raw)
+        response_error = @error_handler.check_error(response, raw:)
         raise response_error unless response_error.nil?
+
         # All done, return the response
         response
       end
@@ -85,6 +86,7 @@ module Redd
     def ensure_access_is_valid
       # If access is nil, panic
       raise 'client access is nil, try calling #authenticate' if @access.nil?
+
       # Refresh access if auto_refresh is enabled
       refresh if @access.expired? && @auto_refresh && @auth && @auth.refreshable?(@access)
     end
@@ -95,6 +97,7 @@ module Redd
       # FIXME: maybe only retry GET requests, for obvious reasons?
       @failures += 1
       raise e if @failures > @max_retries
+
       warn "Redd got a #{e.class.name} error (#{e.message}), retrying..."
       retry
     rescue Errors::RateLimitError => e

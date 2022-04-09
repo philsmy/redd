@@ -55,7 +55,7 @@ module Redd
             comment.delete
             deleted << fullname
           end
-          action == :keep || action == :delete
+          %i[keep delete].include?(action)
         end
         deleted
       end

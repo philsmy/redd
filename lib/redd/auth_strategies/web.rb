@@ -7,7 +7,7 @@ module Redd
     # A typical code-based authentication, for 'web' and 'installed' types.
     class Web < AuthStrategy
       def initialize(client_id:, redirect_uri:, secret: '', **kwargs)
-        super(client_id: client_id, secret: secret, **kwargs)
+        super(client_id:, secret:, **kwargs)
         @redirect_uri = redirect_uri
       end
 
@@ -15,7 +15,7 @@ module Redd
       # @param code [String] the code returned by reddit
       # @return [Access]
       def authenticate(code)
-        request_access('authorization_code', code: code, redirect_uri: @redirect_uri)
+        request_access('authorization_code', code:, redirect_uri: @redirect_uri)
       end
 
       # @return [Boolean] whether the access has a refresh token

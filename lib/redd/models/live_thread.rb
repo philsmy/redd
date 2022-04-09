@@ -30,7 +30,7 @@ module Redd
       # Add an update to this live event.
       # @param body [String] the update text
       def update(body)
-        client.post("/api/live/#{read_attribute(:id)}/update", body: body)
+        client.post("/api/live/#{read_attribute(:id)}/update", body:)
       end
 
       # Strike out a live thread update.
@@ -77,7 +77,7 @@ module Redd
 
       # @!attribute [r] name
       #   @return [String] the thread fullname
-      property :name, default: ->() { "LiveUpdateEvent_#{read_attribute(:id)}" }
+      property :name, default: -> { "LiveUpdateEvent_#{read_attribute(:id)}" }
 
       # @!attribute [r] description
       #   @return [String] the live thread description

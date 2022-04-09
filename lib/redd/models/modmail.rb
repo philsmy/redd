@@ -46,7 +46,7 @@ module Redd
         ModmailConversation.new(client, client.post(
           '/api/mod/conversations',
           srName: from.display_name, to: to.name,
-          subject: subject, body: body, isAuthorHidden: hidden
+          subject:, body:, isAuthorHidden: hidden
         ).body[:conversation])
       end
 
@@ -54,7 +54,7 @@ module Redd
       # @param id [String] the conversation's id
       # @return [ModmailConversation]
       def get(id)
-        ModmailConversation.new(client, id: id)
+        ModmailConversation.new(client, id:)
       end
     end
   end

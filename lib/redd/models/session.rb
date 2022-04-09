@@ -26,7 +26,7 @@ module Redd
 
       # @return [LiveThread] the live thread
       def live_thread(id)
-        LiveThread.new(client, id: id)
+        LiveThread.new(client, id:)
       end
 
       # @return [Hash] a breakdown of karma over subreddits
@@ -38,7 +38,7 @@ module Redd
       # @param name [String] the username
       # @return [User]
       def user(name)
-        User.new(client, name: name)
+        User.new(client, name:)
       end
 
       # Returns whether a username is available.
@@ -52,7 +52,7 @@ module Redd
       # @param display_name [String] the subreddit's display name
       # @return [Subreddit]
       def subreddit(display_name)
-        Subreddit.new(client, display_name: display_name)
+        Subreddit.new(client, display_name:)
       end
 
       # @return [Array<Multireddit>] array of multireddits belonging to the user
@@ -64,7 +64,7 @@ module Redd
       # @param path [String] the multi's path, surrounded by a leading and trailing /
       # @return [Multireddit]
       def multi(path)
-        Multireddit.new(client, path: path)
+        Multireddit.new(client, path:)
       end
 
       # Get submissions or comments by their fullnames.
@@ -81,11 +81,11 @@ module Redd
       def from_fullnames(*fullnames)
         fullnames.map do |name|
           if name.start_with?('t1_')
-            Comment.new(client, name: name)
+            Comment.new(client, name:)
           elsif name.start_with?('t3_')
-            Submission.new(client, name: name)
+            Submission.new(client, name:)
           elsif name.start_with?('t5_')
-            Subreddit.new(client, name: name)
+            Subreddit.new(client, name:)
           else
             raise "unknown fullname #{name}"
           end
@@ -96,7 +96,7 @@ module Redd
       # @param url [String] the object's url
       # @return [Submission, Comment, nil] the object, or nil if not found
       def from_url(url)
-        client.model(:get, '/api/info', url: url).first
+        client.model(:get, '/api/info', url:).first
       end
 
       # Return a listing of the user's inbox (including comment replies and private messages).
@@ -111,7 +111,7 @@ module Redd
       # @option params [1..100] :limit (25) the maximum number of things to return
       # @return [Listing<Comment, PrivateMessage>]
       def my_messages(category: 'inbox', mark: false, **params)
-        client.model(:get, "/message/#{category}.json", params.merge(mark: mark))
+        client.model(:get, "/message/#{category}.json", params.merge(mark:))
       end
 
       # Mark all messages as read.

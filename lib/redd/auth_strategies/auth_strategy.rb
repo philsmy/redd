@@ -14,7 +14,7 @@ module Redd
       # @param endpoint [String] the url to contact for authentication requests
       # @param user_agent [String] the user agent to send with requests
       def initialize(client_id:, secret:, endpoint: AUTH_ENDPOINT, user_agent: USER_AGENT)
-        super(endpoint: endpoint, user_agent: user_agent)
+        super(endpoint:, user_agent:)
         @client_id = client_id
         @secret = secret
       end
@@ -48,7 +48,7 @@ module Redd
           else
             access.access_token
           end
-        post('/api/v1/revoke_token', token: token)
+        post('/api/v1/revoke_token', token:)
       end
 
       private
@@ -58,8 +58,9 @@ module Redd
       end
 
       def request_access(grant_type, options = {})
-        response = post('/api/v1/access_token', { grant_type: grant_type }.merge(options))
+        response = post('/api/v1/access_token', { grant_type: }.merge(options))
         raise Errors::AuthenticationError.new(response) if response.body.key?(:error)
+
         Models::Access.new(response.body)
       end
     end

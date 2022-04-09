@@ -62,7 +62,7 @@ module Redd
         redirect_uri: @redirect_uri,
         scope: @scope,
         duration: @duration,
-        state: state
+        state:
       )
       @request.session[:redd_state] = state
       [302, { 'Location' => url }, []]
@@ -106,8 +106,8 @@ module Redd
       # Try to get a code (the rescue block will also prevent crazy crashes)
       access = @strategy.authenticate(@request.GET['code'])
       @request.session[:redd_session] = access.to_h
-    rescue Errors::TokenRetrievalError, Errors::ResponseError => error
-      @request.env['redd.error'] = error
+    rescue Errors::TokenRetrievalError, Errors::ResponseError => e
+      @request.env['redd.error'] = e
     end
 
     # Return a {Redd::Models::Session} based on the hash saved into the browser's session.

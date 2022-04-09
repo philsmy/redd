@@ -15,7 +15,7 @@ module Redd
         # TODO: merge response into the conversation
         client.post(
           "/api/mod/conversations/#{read_attribute(:id)}",
-          body: body, isAuthorHidden: hidden, isInternal: internal
+          body:, isAuthorHidden: hidden, isInternal: internal
         ).body
       end
 

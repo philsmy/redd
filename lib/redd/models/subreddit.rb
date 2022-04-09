@@ -128,7 +128,7 @@ module Redd
       # @param title [String] the page's title
       # @return [WikiPage]
       def wiki_page(title)
-        WikiPage.new(client, title: title, subreddit: self)
+        WikiPage.new(client, title:, subreddit: self)
       end
 
       # Search a subreddit.
@@ -152,8 +152,8 @@ module Redd
       # @return [Submission] The returned object (url, id and name)
       def submit(title, text: nil, url: nil, resubmit: false, sendreplies: true)
         params = {
-          title: title, sr: read_attribute(:display_name),
-          resubmit: resubmit, sendreplies: sendreplies
+          title:, sr: read_attribute(:display_name),
+          resubmit:, sendreplies:
         }
         params[:kind] = url ? 'link' : 'self'
         params[:url]  = url  if url
@@ -167,7 +167,7 @@ module Redd
       # @param text [String] the message text
       # @param from [Subreddit, nil] the subreddit to send the message on behalf of
       def send_message(subject:, text:, from: nil)
-        super(to: "/r/#{read_attribute(:display_name)}", subject: subject, text: text, from: from)
+        super(to: "/r/#{read_attribute(:display_name)}", subject:, text:, from:)
       end
 
       # Set the flair for a link or a user for this subreddit.
@@ -202,6 +202,7 @@ module Redd
         # We have to do this because reddit returns all flairs if given a nonexistent user
         flair = flair_listing(name: user.name).first
         return flair if flair && flair[:user].casecmp(user.name).zero?
+
         nil
       end
 
@@ -209,7 +210,7 @@ module Redd
       # @param thing [User, String] a User from which to remove flair
       def delete_flair(user)
         name = user.is_a?(User) ? user.name : user
-        client.post("/r/#{read_attribute(:display_name)}/api/deleteflair", name: name)
+        client.post("/r/#{read_attribute(:display_name)}/api/deleteflair", name:)
       end
 
       # Set a Submission's or User's flair based on a flair template id.
@@ -218,7 +219,7 @@ module Redd
       # @param text [String] optional text for the flair
       def set_flair_template(thing, template_id, text: nil)
         key = thing.is_a?(User) ? :name : :link
-        params = { key => thing.name, flair_template_id: template_id, text: text }
+        params = { key => thing.name, flair_template_id: template_id, text: }
         client.post("/r/#{read_attribute(:display_name)}/api/selectflair", params)
       end
 
@@ -227,8 +228,8 @@ module Redd
         client.post(
           '/api/subscribe',
           sr_name: read_attribute(:display_name),
-          action: action,
-          skip_initial_defaults: skip_initial_defaults
+          action:,
+          skip_initial_defaults:
         )
       end
 
@@ -288,7 +289,7 @@ module Redd
       # @param user [User] the user to invite
       # @param permissions [String] the permission string to invite the user with
       def invite_moderator(user, permissions: '+all')
-        add_relationship(type: 'moderator_invite', name: user.name, permissions: permissions)
+        add_relationship(type: 'moderator_invite', name: user.name, permissions:)
       end
 
       # Take back a moderator request.
@@ -383,7 +384,7 @@ module Redd
       # @return [String] the url of the uploaded file
       def upload_image(file:, image_type:, upload_type:, image_name: nil)
         file_data = HTTP::FormData::File.new(file)
-        params = { img_type: image_type, upload_type: upload_type, file: file_data }
+        params = { img_type: image_type, upload_type:, file: file_data }
         params[:name] = image_name if upload_type.to_s == 'img'
         client.post("/r/#{read_attribute(:display_name)}/api/upload_sr_img", params).body[:img_src]
       end
@@ -392,9 +393,8 @@ module Redd
       # @param upload_type ['img', 'header', 'icon', 'banner'] the image to delete
       # @param image_name [String] the image name (if upload_type is 'img')
       def delete_image(upload_type:, image_name: nil)
-        unless %w[img header icon banner].include?(upload_type)
-          raise ArgumentError, 'unknown upload_type'
-        end
+        raise ArgumentError, 'unknown upload_type' unless %w[img header icon banner].include?(upload_type)
+
         params = {}
         params[:name] = image_name if upload_type.to_s == 'img'
         client.post("/r/#{read_attribute(:display_name)}/api/delete_sr_#{upload_type}", params)
@@ -547,7 +547,7 @@ module Redd
       # @!attribute [r] display_name_prefixed
       #   @return [String] the display name, prefixed with a "r/".
       #   @deprecated not really deprecated, but prefer just using the display_name directly
-      property :display_name_prefixed, default: ->() { "r/#{read_attribute(:display_name)}" }
+      property :display_name_prefixed, default: -> { "r/#{read_attribute(:display_name)}" }
 
       # @!attribute [r] submit_link_label
       #   @return [String] the label text on the submit link button
@@ -587,7 +587,7 @@ module Redd
 
       # @!attribute [r] url
       #   @return [String] the subreddit's **relative** url (e.g. /r/Redd/)
-      property :url, default: ->() { "/r/#{read_attribute(:display_name)}/" }
+      property :url, default: -> { "/r/#{read_attribute(:display_name)}/" }
 
       # @!attribute [r] quarantined?
       #   @return [Boolean] whether the subreddit is quarantined
@@ -653,6 +653,7 @@ module Redd
       def load_from_fullname
         response = client.get('/api/info', id: read_attribute(:name))
         raise Errors::NotFound.new(response) if response.body[:data][:children].empty?
+
         response.body[:data][:children][0][:data]
       end
 

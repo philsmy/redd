@@ -8,7 +8,7 @@ module Redd
       # @param text [String] The new text.
       # @return [self] the edited thing
       def edit(text)
-        client.post('/api/editusertext', thing_id: read_attribute(:name), text: text)
+        client.post('/api/editusertext', thing_id: read_attribute(:name), text:)
         self
       end
 
