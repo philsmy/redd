@@ -48,7 +48,7 @@ module Redd
 
       # @!attribute [r] scope
       #   @return [Array<String>] the scopes that the user is allowed to access
-      property :scope, with: ->(scope) { scope.split(' ') }
+      property :scope, with: ->(scope) { scope.split }
     end
   end
 end

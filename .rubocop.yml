@@ -21,3 +21,6 @@ Metrics/ParameterLists:
 Metrics/BlockLength:
   Exclude:
     - spec/**/*_spec.rb
+
+Naming/VariableNumber:
+  AllowedIdentifiers: [over_18, profile_over_18, icon_40, icon_70]

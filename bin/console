@@ -80,9 +80,7 @@ else
         code: req.query['code'],
         auto_refresh: true
       )
-      File.open(redd_file_path, 'w') do |f|
-        f.write(reddit.session.client.access.refresh_token)
-      end
+      File.write(redd_file_path, reddit.session.client.access.refresh_token)
     end
   end
 

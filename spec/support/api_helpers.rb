@@ -7,11 +7,11 @@ module APIHelpers
     StubClient.new
   end
 
-  def stub_api(verb, path, params = {}, &block)
+  def stub_api(verb, path, params = {}, &)
     if params.empty?
-      allow_any_instance_of(StubClient).to receive(verb, &block).with(path)
+      allow_any_instance_of(StubClient).to receive(verb, &).with(path)
     else
-      allow_any_instance_of(StubClient).to receive(verb, &block).with(path, params)
+      allow_any_instance_of(StubClient).to receive(verb, &).with(path, params)
     end
   end
 

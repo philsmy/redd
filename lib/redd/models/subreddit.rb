@@ -158,7 +158,7 @@ module Redd
           sendreplies: true,
           kind: url ? 'link' : 'self',
           url:,
-          text:,
+          text:
         }.merge(options).compact
 
         Submission.new(client, client.post('/api/submit', params).body[:json][:data])

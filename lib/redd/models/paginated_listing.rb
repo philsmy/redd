@@ -52,8 +52,8 @@ module Redd
       # Go forward through the listing.
       # @yield [Model] the object returned in the listings
       # @return [Enumerator] if a block wasn't provided
-      def each(&block)
-        return _each(&block) if block_given?
+      def each(&)
+        return _each(&) if block_given?
 
         enum_for(:_each)
       end
@@ -63,8 +63,8 @@ module Redd
       #   This may or may not be desirable.
       # @yield [Model] the object returned in the listings
       # @return [Enumerator] if a block wasn't provided
-      def stream(&block)
-        return _stream(&block) if block_given?
+      def stream(&)
+        return _stream(&) if block_given?
 
         enum_for(:_stream)
       end
@@ -91,14 +91,14 @@ module Redd
 
       # Go forward through the listing.
       # @yield [Object] the object returned in the listings
-      def _each(&block)
+      def _each(&)
         loop do
           return if @limit == 0
 
           remaining = fetch_next_listing
           return if remaining.children.empty? # if the fetched listing is empty
 
-          remaining.each(&block)
+          remaining.each(&)
           return if remaining.after.nil? # if there's no link to the next item
         end
       end
