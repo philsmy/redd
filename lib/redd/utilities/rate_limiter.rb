@@ -11,13 +11,9 @@ module Redd
 
       def after_limit
         sleep_time = (@last_request_time + @gap) - Time.now
-
         sleep(sleep_time) if sleep_time > 0.01
-
         response = yield
-
         @last_request_time += @gap
-
         response
       end
     end

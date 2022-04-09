@@ -22,14 +22,13 @@ module Redd
       def search(query, **params)
         params[:q] = query
         params[:t] = params.delete(:time) if params.key?(:time)
-
-        return @client.model(:get, '/search', params) unless params[:restrict_to]
-
-        subreddit = params.delete(:restrict_to)
-
-        params[:restrict_sr] = true
-
-        @client.model(:get, "/r/#{subreddit}/search", params)
+        if params[:restrict_to]
+          subreddit = params.delete(:restrict_to)
+          params[:restrict_sr] = true
+          client.model(:get, "/r/#{subreddit}/search", params)
+        else
+          client.model(:get, '/search', params)
+        end
       end
     end
   end

@@ -14,7 +14,7 @@ module Redd
       # @param endpoint [String] the url to contact for authentication requests
       # @param user_agent [String] the user agent to send with requests
       def initialize(client_id:, secret:, endpoint: AUTH_ENDPOINT, user_agent: USER_AGENT)
-        super(endpoint:, user_agent:)
+        super(endpoint: endpoint, user_agent: user_agent)
         @client_id = client_id
         @secret = secret
       end
@@ -23,6 +23,11 @@ module Redd
       # @return [Access] the access token object
       def authenticate(*)
         raise 'abstract method: this strategy cannot authenticate with reddit'
+      end
+
+      # @return [Boolean] whether the access object can be refreshed
+      def refreshable?(_access)
+        false
       end
 
       # @abstract Refresh the authentication and return the refreshed access
@@ -35,7 +40,15 @@ module Redd
       # Revoke the access token, making it invalid for future requests.
       # @param access [Access, String] the access to revoke
       def revoke(access)
-        post('/api/v1/revoke_token', token: access_token(access))
+        token =
+          if access.is_a?(String)
+            access
+          elsif access.respond_to?(:refresh_token)
+            access.refresh_token
+          else
+            access.access_token
+          end
+        post('/api/v1/revoke_token', token: token)
       end
 
       private
@@ -44,18 +57,10 @@ module Redd
         @connection ||= super.basic_auth(user: @client_id, pass: @secret)
       end
 
-      def access_token(access)
-        return access if access.is_a?(String)
-
-        access.respond_to?(:refresh_token) ? access.refresh_token : access.access_token
-      end
-
-      def request_access(grant_type, **options)
-        response = post('/api/v1/access_token', { grant_type: }.merge(options))
-
-        raise AuthenticationError, response if response.body.key?(:error)
-
-        Models::Access.new(self, response.body)
+      def request_access(grant_type, options = {})
+        response = post('/api/v1/access_token', { grant_type: grant_type }.merge(options))
+        raise Errors::AuthenticationError.new(response) if response.body.key?(:error)
+        Models::Access.new(response.body)
       end
     end
   end

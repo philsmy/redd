@@ -7,7 +7,7 @@ module Redd
   # The base class for JSON-based HTTP clients. Generic enough to be used for basically anything.
   class Client
     # The default User-Agent to use if none was provided.
-    USER_AGENT = "Ruby:Redd:v#{Redd::VERSION} (by unknown)".freeze
+    USER_AGENT = "Ruby:Redd:v#{Redd::VERSION} (by unknown)"
 
     # Holds a returned HTTP response.
     Response = Struct.new(:code, :headers, :raw_body) do
@@ -33,11 +33,8 @@ module Redd
     # @option options [Hash] :body the direct body contents
     # @return [Response] the response
     def request(verb, path, options = {})
-      # Uncomment if desperate
-      # puts "#{verb} #{path}: #{options}"
-
+      # puts "#{verb.to_s.upcase} #{path}", '  ' + options.inspect
       response = connection.request(verb, path, **options)
-
       Response.new(response.status.code, response.headers, response.body.to_s)
     end
 
@@ -45,31 +42,41 @@ module Redd
     # @param path [String] the path relative to the endpoint
     # @param options [Hash] the parameters to supply
     # @return [Response] the response
-    def get(path, options = {}) = request(:get, path, params: options)
+    def get(path, options = {})
+      request(:get, path, params: options)
+    end
 
     # Make a POST request.
     # @param path [String] the path relative to the endpoint
     # @param options [Hash] the parameters to supply
     # @return [Response] the response
-    def post(path, options = {}) = request(:post, path, form: options)
+    def post(path, options = {})
+      request(:post, path, form: options)
+    end
 
     # Make a PUT request.
     # @param path [String] the path relative to the endpoint
     # @param options [Hash] the parameters to supply
     # @return [Response] the response
-    def put(path, options = {}) = request(:put, path, form: options)
+    def put(path, options = {})
+      request(:put, path, form: options)
+    end
 
     # Make a PATCH request.
     # @param path [String] the path relative to the endpoint
     # @param options [Hash] the parameters to supply
     # @return [Response] the response
-    def patch(path, options = {}) = request(:patch, path, form: options)
+    def patch(path, options = {})
+      request(:patch, path, form: options)
+    end
 
     # Make a DELETE request.
     # @param path [String] the path relative to the endpoint
     # @param options [Hash] the parameters to supply
     # @return [Response] the response
-    def delete(path, options = {}) = request(:delete, path, form: options)
+    def delete(path, options = {})
+      request(:delete, path, form: options)
+    end
 
     private
 
@@ -78,7 +85,7 @@ module Redd
       # TODO: Make timeouts configurable
       @connection ||= HTTP.persistent(@endpoint)
                           .headers('User-Agent' => @user_agent)
-                          .timeout(write: 20, connect: 20, read: 20)
+                          .timeout(:per_operation, write: 5, connect: 5, read: 5)
     end
   end
 end

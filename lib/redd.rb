@@ -8,20 +8,16 @@ require_relative 'redd/version'
 Dir[File.join(__dir__, 'redd', 'models', '*.rb')].each { |f| require f }
 # Authentication Clients
 Dir[File.join(__dir__, 'redd', 'auth_strategies', '*.rb')].each { |f| require f }
+# Error Classes
+require_relative 'redd/errors'
 # Regular Client
 require_relative 'redd/api_client'
+# Assists
+Dir[File.join(__dir__, 'redd', 'assist', '*.rb')].each { |f| require f }
 
 # Redd is a simple and intuitive API wrapper.
 module Redd
   class << self
-    AUTHORIZATION_URL = 'https://www.reddit.com/api/v1/authorize?client_id=%<client_id>s' \
-                        '&redirect_uri=%<redirect_uri>s&state=%<state>s&scope=%<scope>s' \
-                        '&response_type=%<response_type>s&duration=%<duration>s'
-
-    AUTH_OPTIONS = %i[client_id secret username password redirect_uri user_agent].freeze
-
-    API_OPTIONS = %i[user_agent limit_time max_retries auto_refresh].freeze
-
     # Based on the arguments you provide it, it guesses the appropriate authentication strategy.
     # You can do this manually with:
     #
@@ -68,9 +64,7 @@ module Redd
     # @return [Models::Session] a fresh {Models::Session} for you to make requests with
     def it(opts = {})
       api_client = script(opts) || web(opts) || userless(opts)
-
       raise "couldn't guess app type" unless api_client
-
       Models::Session.new(api_client)
     end
 
@@ -83,38 +77,30 @@ module Redd
     # @param duration ['temporary', 'permanent'] the duration to request the code for (only applies
     #   when response_type is 'code')
     # @return [String] the generated url
-    def url(**options)
-      validate_url_options!(options)
-
-      format(
-        AUTHORIZATION_URL,
-        client_id: options[:client_id],
-        redirect_uri: URI.encode_www_form(options[:redirect_uri]),
-        state: options[:state],
-        scope: (options[:scope] || %w[identity]).join(','),
-        response_type: options[:response_type] || 'code',
-        duration: options[:duration] || 'temporary'
+    def url(client_id:, redirect_uri:, response_type: 'code', state: '', scope: ['identity'],
+            duration: 'temporary')
+      'https://www.reddit.com/api/v1/authorize?' + URI.encode_www_form(
+        client_id: client_id,
+        redirect_uri: redirect_uri,
+        state: state,
+        scope: scope.join(','),
+        response_type: response_type,
+        duration: duration
       )
     end
 
     private
 
-    def validate_url_options!(options)
-      raise 'client_id required' unless options[:client_id]
-      raise 'redirect_uri required' unless options[:redirect_uri]
-    end
-
     def filter_auth(opts)
-      opts.select { |k| AUTH_OPTIONS.include?(k) }
+      opts.select { |k| %i[client_id secret username password redirect_uri user_agent].include?(k) }
     end
 
     def filter_api(opts)
-      opts.select { |k| API_OPTIONS.include?(k) }
+      opts.select { |k| %i[user_agent limit_time max_retries auto_refresh].include?(k) }
     end
 
     def script(opts = {})
       return unless %i[client_id secret username password].all? { |o| opts.include?(o) }
-
       auth = AuthStrategies::Script.new(filter_auth(opts))
       api = APIClient.new(auth, **filter_api(opts))
       api.tap(&:authenticate)
@@ -122,7 +108,6 @@ module Redd
 
     def web(opts = {})
       return unless %i[client_id redirect_uri code].all? { |o| opts.include?(o) }
-
       auth = AuthStrategies::Web.new(**filter_auth(opts))
       api = APIClient.new(auth, **filter_api(opts))
       api.tap { |c| c.authenticate(opts[:code]) }
@@ -130,7 +115,6 @@ module Redd
 
     def userless(opts = {})
       return unless %i[client_id secret].all? { |o| opts.include?(o) }
-
       auth = AuthStrategies::Userless.new(filter_auth(opts))
       api = APIClient.new(auth, **filter_api(opts))
       api.tap(&:authenticate)
