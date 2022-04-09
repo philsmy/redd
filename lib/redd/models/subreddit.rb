@@ -150,14 +150,17 @@ module Redd
       #   posted there before (you monster)
       # @param sendreplies [Boolean] whether to send the replies to your inbox
       # @return [Submission] The returned object (url, id and name)
-      def submit(title, text: nil, url: nil, resubmit: false, sendreplies: true)
+      def submit(title, text: nil, url: nil, **options)
         params = {
-          title:, sr: read_attribute(:display_name),
-          resubmit:, sendreplies:
-        }
-        params[:kind] = url ? 'link' : 'self'
-        params[:url]  = url  if url
-        params[:text] = text if text
+          title:,
+          sr: read_attribute(:display_name),
+          resubmit: false,
+          sendreplies: true,
+          kind: url ? 'link' : 'self',
+          url:,
+          text:,
+        }.merge(options).compact
+
         Submission.new(client, client.post('/api/submit', params).body[:json][:data])
       end
 
