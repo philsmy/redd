@@ -263,10 +263,11 @@ module Redd
       # Modify the subreddit's settings.
       # @param params [Hash] the settings to change
       # @see https://www.reddit.com/dev/api#POST_api_site_admin
-      def modify_settings(**params)
-        full_params = settings.merge(params)
-        full_params[:sr] = read_attribute(:name)
+      def modify_settings(**new_settings)
+        full_params = settings.merge(**new_settings).merge(sr: read_attribute(:name))
+
         SETTINGS_MAP.each { |src, dest| full_params[dest] = full_params.delete(src) }
+
         client.post('/api/site_admin', full_params)
       end
 
