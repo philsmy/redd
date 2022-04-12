@@ -111,7 +111,8 @@ module Redd
     def web(opts = {})
       return unless %i[client_id redirect_uri code].all? { |o| opts.include?(o) }
 
-      auth = AuthStrategies::Web.new(**filter_auth(opts))
+      our_opts = filter_auth(opts)
+      auth = AuthStrategies::Web.new(client_id: our_opts[:client_id], redirect_uri: our_opts[:redirect_uri])
       api = APIClient.new(auth, **filter_api(opts))
       api.tap { |c| c.authenticate(opts[:code]) }
     end
